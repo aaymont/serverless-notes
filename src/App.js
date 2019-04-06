@@ -1,13 +1,19 @@
 import React, { Component } from 'react';
 import { API, graphqlOperation } from 'aws-amplify';
 import { withAuthenticator } from 'aws-amplify-react';
-import { createNote } from './graphql/mutations';
+import { createNote, deleteNote } from './graphql/mutations';
+import { listNotes } from './graphql/queries';
 
 class App extends Component {
   state = {
     note: "",
     notes: []
   };
+
+  async componentDidMount() {
+    const result = await API.graphql(graphqlOperation(listNotes));
+    this.setState({ notes: result.data.listNotes.items });
+  }
 
   handleChangeNote = event => this.setState({ note: event.target.value });
 
@@ -20,6 +26,15 @@ class App extends Component {
     const updatedNotes = [newNote, ...notes];
     this.setState({ notes: updatedNotes, note: "" });
   };
+
+  handleDeleteNote =  async noteId => {
+    const { notes } = this.state;
+    const input = { id: noteId };
+    const result = await API.graphql(graphqlOperation(deleteNote, { input }));
+    const deletedNoteId = result.data.deleteNote.id;
+    const updatedNotes = notes.filter(note => note.id !== deletedNoteId);
+    this.setState({ notes: updatedNotes });
+  }
 
   render() {
     const { notes, note } = this.state;
@@ -44,7 +59,7 @@ class App extends Component {
                   <li className="list pa1 f3">
                     {item.note}
                   </li>
-                  <button className="bg-transparent bn f4">
+                  <button onClick={() => this.handleDeleteNote(item.id)} className="bg-transparent bn f4">
                     <span>&times;</span>
                   </button>
                 </div>
