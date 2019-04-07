@@ -3,6 +3,8 @@ import { API, graphqlOperation } from 'aws-amplify';
 import { withAuthenticator } from 'aws-amplify-react';
 import { createNote, deleteNote, updateNote } from './graphql/mutations';
 import { listNotes } from './graphql/queries';
+import { onCreateNote } from './graphql/subscriptions';
+import { CognitoHostedUIIdentityProvider } from '@aws-amplify/auth';
 
 class App extends Component {
   state = {
@@ -12,6 +14,22 @@ class App extends Component {
   };
 
   async componentDidMount() {
+    this.getNotes();
+    this.createNoteListener = API.graphql(graphqlOperation(onCreateNote)).subscribe({
+      next: noteData => {
+        const newNote = noteData.value.data.onCreateNote;
+        const prevNotes = this.state.notes.filter(note => note.id !== newNote.id);
+        const updatedNotes = [...prevNotes, newNote];
+        this.setState({ notes: updatedNotes });
+      }
+    })
+  }
+
+  componentWillUnmount() {
+    this.createNoteListener.unsubscribe();
+  }
+
+  getNotes = async () => {
     const result = await API.graphql(graphqlOperation(listNotes));
     this.setState({ notes: result.data.listNotes.items });
   }
@@ -29,18 +47,17 @@ class App extends Component {
   }
 
   handleAddNote = async event => {
+    const { note } = this.state;
     event.preventDefault();
     // Check if we have an existing note, if so update
     if (this.hasExistingNote()) {
-      console.log('note updated');
       this.handleUpdateNote();
     } else {
-      const { note, notes } = this.state;
       const input = { note };
-      const result = await API.graphql(graphqlOperation(createNote, { input }));
-      const newNote = result.data.createNote;
-      const updatedNotes = [newNote, ...notes];
-      this.setState({ notes: updatedNotes, note: "" });
+      await API.graphql(graphqlOperation(createNote, { input }));
+      //const newNote = result.data.createNote;
+      //const updatedNotes = [newNote, ...notes];
+      this.setState({ note: "" });
     }
   };
 
