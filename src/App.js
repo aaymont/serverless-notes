@@ -72,10 +72,10 @@ class App extends Component {
       updatedNote,
       ...notes.slice(index + 1)
     ]
-    this.setState({ notes: updatedNotes, note: "", id: ""});
+    this.setState({ notes: updatedNotes, note: "", id: "" });
   }
-  
-  handleDeleteNote =  async noteId => {
+
+  handleDeleteNote = async noteId => {
     const { notes } = this.state;
     const input = { id: noteId };
     const result = await API.graphql(graphqlOperation(deleteNote, { input }));
@@ -100,21 +100,21 @@ class App extends Component {
           />
           <button className="pa2 f4"
             type="submit">
-              {id ? "Update Note" : "Add Note"}
-            </button>
-            {/* Notes List */}
-            <div>
-              {notes.map(item => (
-                <div key={item.id} className="flex items-center">
-                  <li onClick={() => this.handleSetNote(item)} className="list pa1 f3">
-                    {item.note}
-                  </li>
-                  <button onClick={() => this.handleDeleteNote(item.id)} className="bg-transparent bn f4">
-                    <span>&times;</span>
-                  </button>
-                </div>
-              ))}
-            </div>
+            {id ? "Update Note" : "Add Note"}
+          </button>
+          {/* Notes List */}
+          <div>
+            {notes.map(item => (
+              <div key={item.id} className="flex items-center">
+                <li onClick={() => this.handleSetNote(item)} className="list pa1 f3">
+                  {item.note}
+                </li>
+                <button onClick={() => this.handleDeleteNote(item.id)} className="bg-transparent bn f4">
+                  <span>&times;</span>
+                </button>
+              </div>
+            ))}
+          </div>
         </form>
       </div>
     );
